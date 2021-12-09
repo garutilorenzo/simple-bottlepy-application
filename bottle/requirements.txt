@@ -1,0 +1,8 @@
+xmltodict
+psycopg2
+SQLAlchemy
+bottle
+uwsgi
+# redis
+# boto3
+# awscli

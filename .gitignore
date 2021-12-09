@@ -1,0 +1,10 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+*.7z
+data/*.xml
+data/*/*.xml
+data/*/*.7z
+
+docker-compose.yml

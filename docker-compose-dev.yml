@@ -1,0 +1,64 @@
+version: '3.4'
+services:
+
+  bottle:
+    image: bottle-be:dev
+    build:
+     context: bottle/
+     args:
+       - http_proxy=$http_proxy
+       - https_proxy=$http_proxy
+    container_name: bottle
+    environment:
+      - PYTHONPATH=$PYTHONPATH:/app/src
+      - BOTTLE_APP_ENVIRONMENT=dev
+      - BOTTLE_APP_NAME=bottle
+    volumes:
+      - ./src:/app/src
+      - ./data:/data
+    command: ['python', 'bottle/app.py']
+    ports:
+      - 8080:8080
+    depends_on:
+      - pgsql
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "5"
+    restart: always
+
+  pgsql:
+    image: postgres:latest
+    container_name: postgres
+    volumes:
+      - type: volume
+        source: postgres
+        target: /var/lib/postgresql/data
+    command: -c shared_buffers=1536MB -c work_mem=15MB
+    environment:
+      - POSTGRES_PASSWORD=b0tTl3_Be#
+      - POSTGRES_USER=bottle
+      - POSTGRES_DB=bottle_exchange
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "5"
+    restart: always
+
+  # redis:
+  #   image: redis:6-alpine
+  #   container_name: redis
+  #   networks:
+  #     - monitoring
+  #     - backend
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "1m"
+  #       max-file: "5"
+  #   restart: always
+
+volumes:
+  postgres:

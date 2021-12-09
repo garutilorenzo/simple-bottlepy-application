@@ -1,0 +1,9 @@
+---
+enable_debug: True
+enable_reloader: True
+http_port: 8080
+pgsql_username: "bottle"
+pgsql_password: "b0tTl3_Be#"
+pgsql_db: "bottle_exchange"
+pgsql_host: "pgsql"
+pgsql_port: 5432
