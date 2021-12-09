@@ -3,6 +3,7 @@ psycopg2
 SQLAlchemy
 bottle
 uwsgi
+pyyaml
 # redis
 # boto3
 # awscli

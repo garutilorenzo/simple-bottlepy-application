@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from sqlalchemy import func, text, Column, String, Integer, Date, Boolean, DateTime, Text
+from sqlalchemy import func, text, Column, String, Integer, Date, Boolean, DateTime, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import ENUM
 
@@ -11,6 +11,8 @@ from .network import Sites
 
 class Users(Base):
     __tablename__ = 'users'
+    
+    __table_args__ = (UniqueConstraint('network_sites', 'user_id', 'name', name='uk_users_site_id_name'),)
 
     id = Column(Integer, primary_key=True)
     site = Column(ENUM(Sites), name="network_sites")

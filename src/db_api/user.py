@@ -8,7 +8,14 @@ def get(session, data):
         return {'errors': errors, 'result': 1}
 
     try:
-        if data.get('user_id'):
+        if data.get('user_id') and data.get('site') and data.get('name'):
+            user = session.query(Users).filter(Users.user_id == data['user_id'])\
+                .filter(Users.site == data['site'])\
+                .filter(Users.name == data['name']).one()
+        elif data.get('site') and data.get('name'):
+            user = session.query(Users).filter(Users.site == data['site'])\
+                .filter(Users.name == data['name']).one()
+        elif data.get('user_id'):
             user = session.query(Users).filter(Users.user_id == data['user_id']).one()
         elif data.get('id'):
             user = session.query(Users).filter(Users.id == data['id']).one()

@@ -10,7 +10,7 @@ do
     echo $full_url
     echo $base_name
     mkdir -p $DATA_PATH/$base_name
-    # curl -L $full_url -o $DATA_PATH/$base_name/$sample
+    curl -L $full_url -o $DATA_PATH/$base_name/$sample
     7za e  -o$DATA_PATH$base_name/ $DATA_PATH$base_name/$sample
 
 done

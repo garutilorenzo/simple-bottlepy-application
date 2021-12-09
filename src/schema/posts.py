@@ -1,7 +1,7 @@
 # coding=utf-8
 import enum
 
-from sqlalchemy import func, text, Table, ForeignKey, Column, String, Text, Integer, Date, Boolean, DateTime
+from sqlalchemy import func, text, Table, ForeignKey, Column, String, Text, Integer, Date, Boolean, DateTime, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import relationship, backref
 
@@ -52,6 +52,8 @@ class CloseReason(enum.Enum):
 
 class Posts(Base):
     __tablename__ = 'posts'
+    
+    __table_args__ = (UniqueConstraint('network_sites', 'post_id', 'title', name='uk_posts_site_id_title'),)
 
     id = Column(Integer, primary_key=True)
     site = Column(ENUM(Sites), name="network_sites")
@@ -87,6 +89,8 @@ class Posts(Base):
 
 class PostHistory(Base):
     __tablename__ = 'post_history'
+
+    __table_args__ = (UniqueConstraint('network_sites', 'post_history_id', 'post_id', name='uk_post_history_site_id_postid'),)
 
     id = Column(Integer, primary_key=True)
     site = Column(ENUM(Sites), name="network_sites")

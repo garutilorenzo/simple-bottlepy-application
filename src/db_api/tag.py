@@ -7,7 +7,14 @@ def get(session, data):
         errors.append('missing input data')
         return {'errors': errors, 'result': 1}
     try:
-        if data.get('id'):
+        if data.get('tag_id') and data.get('site') and data.get('name'):
+            tag = session.query(Tags).filter(Tags.tag_id == data['tag_id'])\
+                .filter(Tags.site == data['site'])\
+                .filter(Tags.name == data['name']).one()
+        elif data.get('site') and data.get('name'):
+            tag = session.query(Tags).filter(Tags.site == data['site'])\
+                .filter(Tags.name == data['name']).one()
+        elif data.get('id'):
             tag = session.query(Tags).filter(Tags.id == data['id']).one()
         elif data.get('tag_id'):
             tag = session.query(Tags).filter(Tags.tag_id == data['tag_id']).one()

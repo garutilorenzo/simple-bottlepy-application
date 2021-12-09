@@ -1,4 +1,6 @@
 import json,csv,re,os
+
+from sqlalchemy.sql.expression import insert
 import xmltodict
 import xml.etree.ElementTree as ET
 
@@ -36,17 +38,18 @@ def parse_tags(session, site, dirname):
     res = xml_to_dict(filename)
         
     for r in res['tags']['row']:
-        tag = db_api.tag.get(session=session, data={'tag_id': r['@Id']})
+        search_data = {'tag_id': r['@Id'], 'site': site, 'name': r['@TagName']}
+        tag = db_api.tag.get(session=session, data=search_data)
         if not tag.get('result'):
             clean_name = clenaup_string(s=r['@TagName'])
-            data = {
+            insert_data = {
                 'site': site,
                 'tag_id': r['@Id'],
                 'name': r['@TagName'],
                 'clean_name': clean_name,
                 'questions': r['@Count'],
             }
-            tag = db_api.tag.create(session=session, data=data)
+            tag = db_api.tag.create(session=session, data=insert_data)
             print(tag)
 
 def parse_users(session, site, dirname):
@@ -54,10 +57,11 @@ def parse_users(session, site, dirname):
     res = xml_to_dict(filename)
     
     for r in res['users']['row']:
-        user = db_api.user.get(session=session, data={'user_id': r['@Id']})
+        search_data = {'user_id': r['@Id'], 'site': site, 'name': r['@DisplayName']}
+        user = db_api.user.get(session=session, data=search_data)
         if not user.get('result'):
             clean_name = clenaup_string(s=r['@DisplayName'])
-            data = {
+            insert_data = {
                 'site': site,
                 'user_id': r['@Id'],
                 'name': r['@DisplayName'],
@@ -73,7 +77,7 @@ def parse_users(session, site, dirname):
                 'created_time': r.get('@CreationDate'),
                 'last_access_time': r.get('@LastAccessDate'),
             }
-            user = db_api.user.create(session=session, data=data)
+            user = db_api.user.create(session=session, data=insert_data)
             print(user)
 
 def parse_posts(session, site, dirname):
@@ -81,12 +85,15 @@ def parse_posts(session, site, dirname):
     res = xml_to_dict(filename)
     
     for r in res['posts']['row']:
-        post = db_api.post.get(session=session, data={'post_id': r['@Id']})
+        
+        search_data = {'post_id': r['@Id'], 'site': site, 'title': r.get('@Title', '')}
+        post = db_api.post.get(session=session, data=search_data)
+        
         if not post.get('result'):
             post_type = utils.get_post_type(int(r['@PostTypeId']))
             clean_title = clenaup_string(s=r.get('@Title', ''))
 
-            data = {
+            insert_data = {
                 'site': site,
                 'post_id': int(r['@Id']),
                 'title': r.get('@Title', ''),
@@ -107,12 +114,12 @@ def parse_posts(session, site, dirname):
                 'created_time': r.get('@CreationDate'),
             }
             
-            data['tags'] = ''
-            if data.get('raw_tags'):
-                tags_split = data['raw_tags'].split('>')
+            insert_data['tags'] = ''
+            if insert_data.get('raw_tags'):
+                tags_split = insert_data['raw_tags'].split('>')
                 clean_tags = [t.replace('<','') for t in tags_split if t != '']
-                data['tags'] = clean_tags
-            post = db_api.post.create(session=session, data=data)
+                insert_data['tags'] = clean_tags
+            post = db_api.post.create(session=session, data=insert_data)
             print(post)
 
 def parse_post_history(session, site, dirname):
@@ -120,12 +127,15 @@ def parse_post_history(session, site, dirname):
     res = xml_to_dict(filename)
     
     for r in res['posthistory']['row']:
-        post_history = db_api.post_history.get(session=session, data={'post_history_id': r['@Id']})
+        
+        search_data = {'post_history_id': r['@Id'], 'site': site, 'post_id': int(r['@PostId'])}
+
+        post_history = db_api.post_history.get(session=session, data=search_data)
         if not post_history.get('result'):
             
             post_history_type = utils.get_post_history_type(int(r['@PostHistoryTypeId']))
 
-            data = {
+            insert_data = {
                 'site': site,
                 'post_history_id': int(r['@Id']),
                 'post_id': int(r['@PostId']),
@@ -137,7 +147,7 @@ def parse_post_history(session, site, dirname):
                 'created_time': r.get('@CreationDate'),
             }
             
-            post = db_api.post_history.create(session=session, data=data)
+            post = db_api.post_history.create(session=session, data=insert_data)
             print(post)
 
 if __name__ == '__main__':

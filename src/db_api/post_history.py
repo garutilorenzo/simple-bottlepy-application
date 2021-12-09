@@ -9,7 +9,16 @@ def get(session, data):
         errors.append('missing input data')
         return {'errors': errors, 'result': 1}
     try:
-        if data.get('post_history_id'):
+        if data.get('post_history_id') and data.get('site') and data.get('post_id'):
+            post_history = session.query(PostHistory)\
+                .filter(PostHistory.post_id == data['post_id'])\
+                .filter(PostHistory.post_history_id == data['post_history_id'])\
+                .filter(PostHistory.site == data['site']).one()
+        elif data.get('post_history_id') and data.get('site'):
+            post_history = session.query(PostHistory)\
+                .filter(PostHistory.post_history_id == data['post_history_id'])\
+                .filter(PostHistory.site == data['site']).one()
+        elif data.get('post_history_id'):
             post_history = session.query(PostHistory).filter(PostHistory.post_history_id == data['post_history_id']).one()
         else:
             errors.append('Post post_history_id: {post_history_id} not found'.fomrat(**data))
@@ -30,21 +39,23 @@ def create(session, data):
         question_exists = False
         question_obj = None
         if data.get('post_id'):
-            question_result = post.get(session=session, data={'post_id': data['post_id']})
+            post_data = {'site': data['site'], 'post_id': data['post_id']}
+            question_result = post.get(session=session, data=post_data)
             if not question_result.get('errors'):
                 question_exists = True
                 question_obj = question_result['result']
             else:
-                error.extend(question_result['errors'])
+                errors.extend(question_result['errors'])
         
         # OWNER USER
         user_obj = None
         if data.get('user_id'):
-            user_result = user.get(session=session, data={'user_id': data['user_id']})
+            owner_data = {'site': data['site'], 'user_id': data['user_id']}
+            user_result = user.get(session=session, data=owner_data)
             if not user_result.get('errors'):
-                    user_obj = user_result['result']
+                user_obj = user_result['result']
             else:
-                    error.extend(user_result['errors'])
+                errors.extend(user_result['errors'])
 
         post_history = PostHistory(
             post_history_id= data['post_history_id'],
