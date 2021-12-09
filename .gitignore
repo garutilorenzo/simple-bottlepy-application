@@ -8,3 +8,6 @@ data/*/*.xml
 data/*/*.7z
 
 docker-compose.yml
+
+src/.bash_history
+src/.python_history
