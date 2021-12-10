@@ -29,17 +29,16 @@
         </a>
         </li>
         % end
-        % for page in range(FIRST_MENU_PAGE,LAST_MENU_PAGE):
+        % for nav_page in range(FIRST_MENU_PAGE,LAST_MENU_PAGE):
         <%
             page_css = ''
-            page_nr = page           
-            page_link = '/{}/{}'.format(page_name, str(page_nr))
-            if page_nr == page:
+            page_link = '/{}/{}'.format(page_name, str(nav_page))
+            if page_nr == nav_page:
                 page_css = 'active'
             end
         %>
         
-        <li class="page-item {{ page_css }}"><a class="page-link" href="{{ page_link }}" title="Go to {{ page_nr }} page">{{page_nr}}</a></li>                           
+        <li class="page-item {{ page_css }}"><a class="page-link" href="{{ page_link }}" title="Go to {{ nav_page }} page">{{ nav_page }}</a></li>                           
         % end
         <li class="page-item">
         % if page_nr < MAX_PAGE-PAGES:
