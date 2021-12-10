@@ -15,6 +15,45 @@ def get(session, filters):
         post = None
     return {'errors': errors, 'result': post}
 
+def get_all(session, offset=1, limit=50):
+    errors = []
+    try:
+        posts = session.query(Posts)
+        if limit:
+            posts = posts.limit(limit)
+
+        if offset:
+            offset -= 1
+            posts = posts.offset(offset*limit)
+    except Exception as e:
+        errors.append(e)
+        posts = None
+    return {'errors': errors, 'result': posts}
+
+def get_all_filtered(session, offset=1, limit=50, filters={}, only_questions=False):
+    errors = []
+    
+    if only_questions:
+        filters['parent_id'] = None
+    
+    try:
+        posts = session.query(Posts).filter_by(**filters)
+        count = len(posts.all())
+
+        if limit:
+            posts = posts.limit(limit)
+
+        if offset:
+            offset -= 1
+            posts = posts.offset(offset*limit)
+    except Exception as e:
+        errors.append(e)
+        posts = None
+    return {'errors': errors, 'result': posts, 'count': count}
+
+def count(session):        
+    return session.query(func.count(Posts.id)).scalar() 
+
 def create(session, data):
     errors = []
     if not data:

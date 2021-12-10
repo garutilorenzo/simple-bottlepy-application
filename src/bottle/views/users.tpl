@@ -12,6 +12,7 @@
                         <th scope="col">Views</th>
                         <th scope="col">UP Votes</th>
                         <th scope="col">Down Votes</th>
+                        <th scope="col">Site name</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -23,6 +24,7 @@
                         <td>{{ user.views }}</td>
                         <td>{{ user.up_votes }}</td>
                         <td>{{ user.down_votes }}</td>
+                        <td>{{ user.site.name }}</td>
                       </tr>
                     %end
                     </tbody>

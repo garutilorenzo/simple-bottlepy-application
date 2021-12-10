@@ -4,12 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
-    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
-    <meta name="generator" content="Hugo 0.84.0">
-    <title>Fixed top navbar example · Bootstrap v5.0</title>
+    <meta name="author" content="Lorenzo Garuti">
+    <title>A very simple BottlePy application with SqlAlchemy support</title>
 
     <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/navbar-fixed/">
-
+    <link rel="icon" href="/static/img/bottle.ico" />
     
 
     <!-- Bootstrap core CSS -->

@@ -5,8 +5,8 @@ from schema.base import engine
 from schema.base import Base
 
 from bottle import Bottle, run, \
-     template, view, debug, static_file, request, response, redirect, TEMPLATE_PATH
-import load_config, db_api
+     template, view, debug, static_file, request, response, redirect, TEMPLATE_PATH, SimpleTemplate
+import utils, load_config, db_api
 
 main_config = load_config.load_config()
 
@@ -20,6 +20,12 @@ app = application = Bottle()
 # DB Plugin
 saPlugin = SQLAlchemyPlugin(engine=engine, metadata=Base.metadata)
 application.install(saPlugin)
+
+# Template default variables
+SimpleTemplate.defaults["url"] = lambda: request.url
+SimpleTemplate.defaults["fullpath"] = lambda: request.fullpath
+SimpleTemplate.defaults["nav_pages"] = utils.build_nav_pages()
+SimpleTemplate.defaults["nav_dropdown_pages"] = utils.build_nav_dropdown_pages()
 
 debug(main_config['enable_debug'])
 
@@ -63,12 +69,17 @@ def send_sitemap_gz(filename, db):
 @app.error(404)
 @view('index')
 def error404(db):
-    return dict(error_message='Nothing here, sorry')
+    return dict(page_name='404', error_message='Nothing here, sorry')
 
 @app.route('/')
 @view('index')
 def index(db):
-    return dict(page_name='index')
+    return dict(page_name='home')
+
+@app.route('/docs')
+@view('docs')
+def index(db):
+    return dict(page_name='docs')
 
 @app.route('/users')
 @app.route('/users/<page_nr:int>')
@@ -98,7 +109,7 @@ def get_user(db, id=0, user_name=''):
     current_url = request.url
     current_page = current_url.split('/')[3]
 
-    user_result = db_api.user.get(session=db, data={'id': id})
+    user_result = db_api.user.get(session=db, filters={'id': id})
     if not user_result.get('error'):
         user = user_result['result']
     return dict(page_name=current_page , user=user)
@@ -126,16 +137,38 @@ def get_tags(db, page_nr=1):
     )
     return res
 
-@app.route('/tag/<id:int>/<tag_name>')
-@view('tag')
-def get_tag(db, id=0, tag_name=''):
+@app.route('/posts')
+@app.route('/posts/<page_nr:int>')
+@view('posts')
+def get_posts(db, page_nr=1):
     current_url = request.url
     current_page = current_url.split('/')[3]
 
-    tag_result = db_api.tag.get(session=db, data={'id': id})
-    if not tag_result.get('error'):
-        tag = tag_result['result']
-    return dict(page_name=current_page , tag=tag)
+    posts = []
+    count_all_posts = 0
+    posts_result = db_api.post.get_all_filtered(offset=page_nr, session=db, only_questions=True)
+    if not posts_result.get('errors'):
+        posts = posts_result['result']
+        count_all_posts = posts_result['count']
+    
+    res = dict(
+        page_name=current_page, 
+        posts=posts, 
+        records=count_all_posts, 
+        page_nr=page_nr,
+    )
+    return res
+
+@app.route('/post/<id:int>/<post_title>')
+@view('post')
+def get_post(db, id=0, post_title=''):
+    current_url = request.url
+    current_page = current_url.split('/')[3]
+
+    posts_result = db_api.post.get(session=db, filters={'id': id})
+    if not posts_result.get('error'):
+        post = posts_result['result']
+    return dict(page_name=current_page , post=post)
 
 
 if __name__ == '__main__':

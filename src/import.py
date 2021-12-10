@@ -92,7 +92,10 @@ def parse_posts(session, site, dirname):
         if not post_result.get('result'):
             post_type = utils.get_post_type(int(r['@PostTypeId']))
             clean_title = clenaup_string(s=r.get('@Title', ''))
-
+            
+            if not post_type:
+                continue
+                
             insert_data = {
                 'site': site,
                 'post_id': int(r['@Id']),

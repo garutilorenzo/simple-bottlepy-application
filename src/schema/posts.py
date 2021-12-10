@@ -64,8 +64,7 @@ class Posts(Base):
     post_id = Column(Integer)
 
     parent_id = Column(Integer, ForeignKey('posts.id'))
-    # question = relationship("Posts", lazy='subquery', backref=backref('answer', remote_side=[id]))
-    question = relationship("Posts", remote_side=[id], backref='answer')
+    question = relationship("Posts", remote_side=[id], backref='answers')
     
     post_type = Column(ENUM(PostType), name="post_type")
     
@@ -80,6 +79,9 @@ class Posts(Base):
     last_editor_user = relationship("Users", foreign_keys=[last_editor_user_id], back_populates="edited_posts")
     
     tags = relationship("Tags", secondary=post_tag_association)
+
+    post_history = relationship("PostHistory", backref="posts")
+
     answer_count = Column(Integer, default=0)
     comment_count = Column(Integer, default=0)
     last_edited_date = Column(DateTime(timezone=True))
