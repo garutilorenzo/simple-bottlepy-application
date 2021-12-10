@@ -90,7 +90,7 @@ class Posts(Base):
 class PostHistory(Base):
     __tablename__ = 'post_history'
 
-    __table_args__ = (UniqueConstraint('network_sites', 'post_history_id', 'post_id', name='uk_post_history_site_id_postid'),)
+    __table_args__ = (UniqueConstraint('network_sites', 'post_history_id', name='uk_site_post_history_id'),)
 
     id = Column(Integer, primary_key=True)
     site = Column(ENUM(Sites), name="network_sites")

@@ -1,28 +1,13 @@
 from sqlalchemy import func
 from schema.tags import Tags
 
-def get(session, data):
+def get(session, filters):
     errors = []
-    if not data:
-        errors.append('missing input data')
+    if not filters:
+        errors.append('no filter provided')
         return {'errors': errors, 'result': 1}
     try:
-        if data.get('tag_id') and data.get('site') and data.get('name'):
-            tag = session.query(Tags).filter(Tags.tag_id == data['tag_id'])\
-                .filter(Tags.site == data['site'])\
-                .filter(Tags.name == data['name']).one()
-        elif data.get('site') and data.get('name'):
-            tag = session.query(Tags).filter(Tags.site == data['site'])\
-                .filter(Tags.name == data['name']).one()
-        elif data.get('id'):
-            tag = session.query(Tags).filter(Tags.id == data['id']).one()
-        elif data.get('tag_id'):
-            tag = session.query(Tags).filter(Tags.tag_id == data['tag_id']).one()
-        elif data.get('name'):
-            tag = session.query(Tags).filter(Tags.name == data['name']).one()
-        else:
-            errors.append('Tag not found')
-            tag = None
+        tag = session.query(Tags).filter_by(**filters).one()
     except Exception as e:
         errors.append(e)
         tag = None

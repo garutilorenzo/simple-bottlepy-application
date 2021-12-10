@@ -3,24 +3,13 @@ from schema.posts import Posts
 from . import tag
 from . import user
 
-def get(session, data):
+def get(session, filters):
     errors = []
-    if not data:
-        errors.append('missing input data')
+    if not filters:
+        errors.append('no filter provided')
         return {'errors': errors, 'result': 1}
     try:
-        if data.get('post_id') and data.get('site') and data.get('title'):
-            post = session.query(Posts).filter(Posts.post_id == data['post_id'])\
-                .filter(Posts.site == data['site'])\
-                .filter(Posts.title == data['title']).one()
-        elif data.get('site') and data.get('title'):
-            post = session.query(Posts).filter(Posts.site == data['site'])\
-                .filter(Posts.title == data['title']).one()
-        elif data.get('post_id'):
-            post = session.query(Posts).filter(Posts.post_id == data['post_id']).one()
-        else:
-            errors.append('Post not found')
-            post = None
+        post = session.query(Posts).filter_by(**filters).one()
     except Exception as e:
         errors.append(e)
         post = None
@@ -37,8 +26,8 @@ def create(session, data):
         tags_obj = []
         if len(data['tags']) >=1:
             for tag_name in data['tags']:
-                tag_data = {'site': data['site'], 'name': tag_name}
-                tag_result = tag.get(session=session, data=tag_data)
+                filters_data = {'site': data['site'], 'name': tag_name}
+                tag_result = tag.get(session=session, filters=filters_data)
                 if not tag_result.get('errors'):
                     tag_obj = tag_result['result']
                     tags_obj.append(tag_obj)
@@ -46,8 +35,8 @@ def create(session, data):
         # OWNER USER
         owner_obj = None
         if data.get('owner_user_id'):
-            owner_data = {'site': data['site'], 'user_id': data['owner_user_id']}
-            owner_result = user.get(session=session, data=owner_data)
+            filters_owner = {'site': data['site'], 'user_id': data['owner_user_id']}
+            owner_result = user.get(session=session, filters=filters_owner)
             if not owner_result.get('errors'):
                 owner_obj = owner_result['result']
             else:
@@ -56,8 +45,8 @@ def create(session, data):
         # EDITOR USER
         editor_obj = None
         if data.get('last_editor_user_id'):
-            editor_data = {'site': data['site'], 'user_id': data['last_editor_user_id']}
-            editor_result = user.get(session=session, data=editor_data)
+            filters_editor = {'site': data['site'], 'user_id': data['last_editor_user_id']}
+            editor_result = user.get(session=session, filters=filters_editor)
             if not editor_result.get('errors'):
                 editor_obj = editor_result['result']
             else:
@@ -67,8 +56,8 @@ def create(session, data):
         question_exists = False
         question_obj = None
         if data.get('post_type_id', 0) == 2 and data.get('parent_id'):
-            question_data = {'site': data['site'], 'post_id': data['parent_id']}
-            question_result = get(session=session, data=question_data)
+            filter_question = {'site': data['site'], 'post_id': data['parent_id']}
+            question_result = get(session=session, filters=filter_question)
             if not question_result.get('errors'):
                 question_exists = True
                 question_obj = question_result['result']

@@ -39,8 +39,8 @@ def parse_tags(session, site, dirname):
         
     for r in res['tags']['row']:
         search_data = {'tag_id': r['@Id'], 'site': site, 'name': r['@TagName']}
-        tag = db_api.tag.get(session=session, data=search_data)
-        if not tag.get('result'):
+        tag_result = db_api.tag.get(session=session, filters=search_data)
+        if not tag_result.get('result'):
             clean_name = clenaup_string(s=r['@TagName'])
             insert_data = {
                 'site': site,
@@ -49,8 +49,8 @@ def parse_tags(session, site, dirname):
                 'clean_name': clean_name,
                 'questions': r['@Count'],
             }
-            tag = db_api.tag.create(session=session, data=insert_data)
-            print(tag)
+            tag_insert = db_api.tag.create(session=session, data=insert_data)
+            print(tag_insert)
 
 def parse_users(session, site, dirname):
     filename = '{}/Users.xml'.format(dirname)
@@ -58,8 +58,8 @@ def parse_users(session, site, dirname):
     
     for r in res['users']['row']:
         search_data = {'user_id': r['@Id'], 'site': site, 'name': r['@DisplayName']}
-        user = db_api.user.get(session=session, data=search_data)
-        if not user.get('result'):
+        user_result = db_api.user.get(session=session, filters=search_data)
+        if not user_result.get('result'):
             clean_name = clenaup_string(s=r['@DisplayName'])
             insert_data = {
                 'site': site,
@@ -77,8 +77,8 @@ def parse_users(session, site, dirname):
                 'created_time': r.get('@CreationDate'),
                 'last_access_time': r.get('@LastAccessDate'),
             }
-            user = db_api.user.create(session=session, data=insert_data)
-            print(user)
+            user_insert = db_api.user.create(session=session, data=insert_data)
+            print(user_insert)
 
 def parse_posts(session, site, dirname):
     filename = '{}/Posts.xml'.format(dirname)
@@ -87,9 +87,9 @@ def parse_posts(session, site, dirname):
     for r in res['posts']['row']:
         
         search_data = {'post_id': r['@Id'], 'site': site, 'title': r.get('@Title', '')}
-        post = db_api.post.get(session=session, data=search_data)
+        post_result = db_api.post.get(session=session, filters=search_data)
         
-        if not post.get('result'):
+        if not post_result.get('result'):
             post_type = utils.get_post_type(int(r['@PostTypeId']))
             clean_title = clenaup_string(s=r.get('@Title', ''))
 
@@ -119,8 +119,8 @@ def parse_posts(session, site, dirname):
                 tags_split = insert_data['raw_tags'].split('>')
                 clean_tags = [t.replace('<','') for t in tags_split if t != '']
                 insert_data['tags'] = clean_tags
-            post = db_api.post.create(session=session, data=insert_data)
-            print(post)
+            post_insert = db_api.post.create(session=session, data=insert_data)
+            print(post_insert)
 
 def parse_post_history(session, site, dirname):
     filename = '{}/PostHistory.xml'.format(dirname)
@@ -130,8 +130,8 @@ def parse_post_history(session, site, dirname):
         
         search_data = {'post_history_id': r['@Id'], 'site': site, 'post_id': int(r['@PostId'])}
 
-        post_history = db_api.post_history.get(session=session, data=search_data)
-        if not post_history.get('result'):
+        post_history_result = db_api.post_history.get(session=session, filters=search_data)
+        if not post_history_result.get('result'):
             
             post_history_type = utils.get_post_history_type(int(r['@PostHistoryTypeId']))
 
@@ -147,8 +147,8 @@ def parse_post_history(session, site, dirname):
                 'created_time': r.get('@CreationDate'),
             }
             
-            post = db_api.post_history.create(session=session, data=insert_data)
-            print(post)
+            post_history_insert = db_api.post_history.create(session=session, data=insert_data)
+            print(post_history_insert)
 
 if __name__ == '__main__':
     # site = Sites.vi

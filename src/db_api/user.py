@@ -1,29 +1,14 @@
 from sqlalchemy import func
 from schema.users import Users
 
-def get(session, data):
+def get(session, filters):
     errors = []
-    if not data:
+    if not filters:
         errors.append('missing input data')
         return {'errors': errors, 'result': 1}
 
     try:
-        if data.get('user_id') and data.get('site') and data.get('name'):
-            user = session.query(Users).filter(Users.user_id == data['user_id'])\
-                .filter(Users.site == data['site'])\
-                .filter(Users.name == data['name']).one()
-        elif data.get('site') and data.get('name'):
-            user = session.query(Users).filter(Users.site == data['site'])\
-                .filter(Users.name == data['name']).one()
-        elif data.get('user_id'):
-            user = session.query(Users).filter(Users.user_id == data['user_id']).one()
-        elif data.get('id'):
-            user = session.query(Users).filter(Users.id == data['id']).one()
-        elif data.get('name'):
-            user = session.query(Users).filter(Users.name == data['name']).one()
-        else:
-            errors.append('User not found')
-            user = None
+        user = session.query(Users).filter_by(**filters).one()
     except Exception as e:
         errors.append(e)
         user = None
