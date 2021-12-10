@@ -11,6 +11,7 @@ from schema.network import Sites
 from schema.posts import PostType
 
 DATA_DIRECTORY = '/data/'
+MAX_BULK_ITEMS = 1000
 
 def clenaup_string(s, max_lenght=80):
     translate_string = s.\
@@ -53,6 +54,9 @@ def parse_tags(session, site, dirname):
             print(tag_insert)
 
 def parse_users(session, site, dirname):
+    bulk_insert_count = 0
+    objects_list = []
+    
     filename = '{}/Users.xml'.format(dirname)
     res = xml_to_dict(filename)
     
@@ -77,10 +81,27 @@ def parse_users(session, site, dirname):
                 'created_time': r.get('@CreationDate'),
                 'last_access_time': r.get('@LastAccessDate'),
             }
-            user_insert = db_api.user.create(session=session, data=insert_data)
-            print(user_insert)
+            user_insert = db_api.user.create(session=session, data=insert_data, commit=False)
+            if not user_insert.get('error'):
+                bulk_insert_count +=1
+                objects_list.append(user_insert['user'])
+            
+            if bulk_insert_count == MAX_BULK_ITEMS:
+                bulk_save_result = db_api.utils.bulk_save(session=session, obj_list=objects_list)
+                print('Commit post_history errors: {errors}'.format(**bulk_save_result))
+                print('Commit post_history result: {result}'.format(**bulk_save_result))
+                bulk_insert_count = 0
+                objects_list = []
+    
+    # Object not committed
+    session.bulk_save_objects(objects_list)
+    session.commit()
+    #
 
 def parse_posts(session, site, dirname):
+    bulk_insert_count = 0
+    objects_list = []
+
     filename = '{}/Posts.xml'.format(dirname)
     res = xml_to_dict(filename)
     
@@ -122,10 +143,27 @@ def parse_posts(session, site, dirname):
                 tags_split = insert_data['raw_tags'].split('>')
                 clean_tags = [t.replace('<','') for t in tags_split if t != '']
                 insert_data['tags'] = clean_tags
-            post_insert = db_api.post.create(session=session, data=insert_data)
-            print(post_insert)
+            post_insert = db_api.post.create(session=session, data=insert_data, commit=False)
+            if not post_insert.get('error'):
+                bulk_insert_count +=1
+                objects_list.append(post_insert['post'])
+            
+            if bulk_insert_count == MAX_BULK_ITEMS:
+                bulk_save_result = db_api.utils.bulk_save(session=session, obj_list=objects_list)
+                print('Commit post_history errors: {errors}'.format(**bulk_save_result))
+                print('Commit post_history result: {result}'.format(**bulk_save_result))
+                bulk_insert_count = 0
+                objects_list = []
+    
+    # Object not committed
+    session.bulk_save_objects(objects_list)
+    session.commit()
+    #
 
 def parse_post_history(session, site, dirname):
+    bulk_insert_count = 0
+    objects_list = []
+
     filename = '{}/PostHistory.xml'.format(dirname)
     res = xml_to_dict(filename)
     
@@ -150,8 +188,22 @@ def parse_post_history(session, site, dirname):
                 'created_time': r.get('@CreationDate'),
             }
             
-            post_history_insert = db_api.post_history.create(session=session, data=insert_data)
-            print(post_history_insert)
+            post_history_insert = db_api.post_history.create(session=session, data=insert_data, commit=False)
+            if not post_history_insert.get('error'):
+                bulk_insert_count +=1
+                objects_list.append(post_history_insert['post_history'])
+            
+            if bulk_insert_count == MAX_BULK_ITEMS:
+                bulk_save_result = db_api.utils.bulk_save(session=session, obj_list=objects_list)
+                print('Commit post_history errors: {errors}'.format(**bulk_save_result))
+                print('Commit post_history result: {result}'.format(**bulk_save_result))
+                bulk_insert_count = 0
+                objects_list = []
+    
+    # Object not committed
+    session.bulk_save_objects(objects_list)
+    session.commit()
+    #
 
 if __name__ == '__main__':
     # site = Sites.vi

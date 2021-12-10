@@ -18,7 +18,11 @@ TEMPLATE_PATH.insert(0, '{}/views/'.format(dirname))
 app = application = Bottle()
 
 # DB Plugin
-saPlugin = SQLAlchemyPlugin(engine=engine, metadata=Base.metadata)
+saPlugin = SQLAlchemyPlugin(
+    engine=engine, metadata=Base.metadata, 
+    create=main_config['create_db_schema'], 
+    config=main_config,
+)
 application.install(saPlugin)
 
 # Template default variables

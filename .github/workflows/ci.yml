@@ -1,0 +1,51 @@
+name: BottlePy CI
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: docker-compose -f docker-compose-dev.yml build --pull --no-cache
+    - name: Bringup the environment
+      run: docker-compose -f docker-compose-dev.yml up -d
+    - name: Sleep for 30 seconds
+      uses: jakejarvis/wait-action@master
+      with:
+        time: '30s'
+    - name: List all containers
+      run: docker ps -a
+    - name: Testing connection to BottlePy
+      env:
+        URLS: tags posts users
+      run: for u in $URLS; do docker-compose -f docker-compose-dev.yml exec -T bottle curl --retry 10 --retry-connrefused -I http://localhost:8080/$u; done
+    - uses: anchore/scan-action@v2
+      id: scan
+      with:
+        image: "bottle-be:dev"
+        acs-report-enable: true
+    - name: upload Anchore scan SARIF report
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarif }}
+    - name: Inspect action SARIF report
+      run: cat ${{ steps.scan.outputs.sarif }}
+    - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    - name: Push dev image
+      run: |
+        IMAGE_ID=ghcr.io/${{ github.repository_owner }}/bottle-be:dev
+        echo IMAGE_ID=$IMAGE_ID
+        docker tag bottle-be:dev $IMAGE_ID
+        docker push $IMAGE_ID

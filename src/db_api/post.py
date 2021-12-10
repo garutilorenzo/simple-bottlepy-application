@@ -7,7 +7,7 @@ def get(session, filters):
     errors = []
     if not filters:
         errors.append('no filter provided')
-        return {'errors': errors, 'result': 1}
+        return {'errors': errors, 'result': 0}
     try:
         post = session.query(Posts).filter_by(**filters).one()
     except Exception as e:
@@ -54,11 +54,11 @@ def get_all_filtered(session, offset=1, limit=50, filters={}, only_questions=Fal
 def count(session):        
     return session.query(func.count(Posts.id)).scalar() 
 
-def create(session, data):
+def create(session, data, commit=True):
     errors = []
     if not data:
         errors.append('missing input data')
-        return {'errors': errors, 'result': 1}
+        return {'errors': errors, 'result': 0}
 
     try:            
         # TAGS
@@ -123,10 +123,13 @@ def create(session, data):
             site=data['site'],
         )
         result = 1
-        session.add(post)
-        session.commit()
+        
+        if commit:
+            session.add(post)
+            session.commit()
     except Exception as e:
         errors.append(e)
         result = 0
+        post = None
 
-    return {'errors': errors, 'result': result}
+    return {'errors': errors, 'result': result, 'post': post}

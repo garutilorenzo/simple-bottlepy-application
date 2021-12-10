@@ -5,7 +5,7 @@ def get(session, filters):
     errors = []
     if not filters:
         errors.append('missing input data')
-        return {'errors': errors, 'result': 1}
+        return {'errors': errors, 'result': 0}
 
     try:
         user = session.query(Users).filter_by(**filters).one()
@@ -36,7 +36,7 @@ def update(session, data):
     errors = []
     if not data:
         errors.append('missing input data')
-        return {'errors': errors, 'result': 1}
+        return {'errors': errors, 'result': 0}
 
     try:
         if data.get('user_id'):
@@ -54,11 +54,11 @@ def update(session, data):
 
     return {'errors': errors, 'result': result}
 
-def create(session, data):
+def create(session, data, commit=True):
     errors = []
     if not data:
         errors.append('missing input data')
-        return {'errors': errors, 'result': 1}
+        return {'errors': errors, 'result': 0}
 
     try:
         user = Users(
@@ -78,10 +78,12 @@ def create(session, data):
             site=data['site'],
         )
         result = 1
-        session.add(user)
-        session.commit()
+        if commit:
+            session.add(user)
+            session.commit()
     except Exception as e:
         errors.append(e)
         result = 0
+        user = None
 
-    return {'errors': errors, 'result': result}
+    return {'errors': errors, 'result': result, 'user': user}
