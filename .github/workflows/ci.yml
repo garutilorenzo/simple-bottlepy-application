@@ -42,7 +42,7 @@ jobs:
     - name: Inspect action SARIF report
       run: cat ${{ steps.scan.outputs.sarif }}
     - name: Log in to registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
     - name: Push dev image
       run: |
         IMAGE_ID=ghcr.io/${{ github.repository_owner }}/bottle-be:dev
