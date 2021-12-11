@@ -56,7 +56,7 @@ def get_all_filtered(session, offset=1, limit=50, filters={}, only_questions=Fal
 def count(session):        
     return session.query(func.count(Posts.id)).scalar() 
 
-def create(session, data, commit=True):
+def create(session, data, add=True, commit=True):
     errors = []
     if not data:
         errors.append('missing input data')
@@ -126,8 +126,9 @@ def create(session, data, commit=True):
         )
         result = 1
         
-        if commit:
+        if add:
             session.add(post)
+        if commit:
             session.commit()
     except Exception as e:
         errors.append(e)

@@ -59,6 +59,7 @@ def create(session, data, commit=True):
             session.add(post_history)
             session.commit()
     except Exception as e:
+        session.rollback()
         result = 0
         errors.append(e)
         post_history = None

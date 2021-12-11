@@ -13,7 +13,7 @@ from schema.network import Sites
 from schema.posts import PostType
 
 DATA_DIRECTORY = '/data/'
-MAX_BULK_ITEMS = 8000
+MAX_BULK_ITEMS = 1000
 
 def clenaup_string(s, max_lenght=80):
     translate_string = s.\
@@ -99,15 +99,14 @@ def parse_users(session, site, dirname):
                 objects_list.append(user_insert['user'])
             
             if bulk_insert_count == MAX_BULK_ITEMS:
-                bulk_save_result = db_api.utils.bulk_save(session=session, obj_list=objects_list)
+                bulk_save_result = db_api.utils.bulk_add(session=session, obj_list=objects_list)
                 print('Commit user errors: {errors}'.format(**bulk_save_result))
                 print('Commit user result: {result}'.format(**bulk_save_result))
                 bulk_insert_count = 0
                 objects_list = []
     
     # Object not committed
-    session.bulk_save_objects(objects_list)
-    session.commit()
+    bulk_save_result = db_api.utils.bulk_add(session=session, obj_list=objects_list)
     #
 
 def parse_posts(session, site, dirname):
@@ -117,7 +116,7 @@ def parse_posts(session, site, dirname):
     filename = '{}/Posts.xml'.format(dirname)
     res = my_xml_to_dict(filename)
     
-    for r in res['posts']['row']:
+    for r in res:
               
         search_data = {'post_id': r['@Id'], 'site': site, 'title': r.get('@Title', '')}
         post_result = db_api.post.get(session=session, filters=search_data)
@@ -155,9 +154,19 @@ def parse_posts(session, site, dirname):
                 tags_split = insert_data['raw_tags'].split('>')
                 clean_tags = [t.replace('<','') for t in tags_split if t != '']
                 insert_data['tags'] = clean_tags
-            post_insert = db_api.post.create(session=session, data=insert_data)
-            print(post_insert['result'])
-    
+            post_insert = db_api.post.create(session=session, data=insert_data, add=True, commit=False)
+
+            if not post_insert.get('error'):
+                bulk_insert_count +=1
+            
+            if bulk_insert_count == MAX_BULK_ITEMS:
+                bulk_save_result = db_api.utils.commit(session=session)
+                print('Commit post errors: {errors}'.format(**bulk_save_result))
+                print('Commit post result: {result}'.format(**bulk_save_result))
+                bulk_insert_count = 0
+
+    bulk_save_result = db_api.utils.commit(session=session)
+
 def parse_post_history(session, site, dirname):
     bulk_insert_count = 0
     objects_list = []
@@ -192,15 +201,14 @@ def parse_post_history(session, site, dirname):
                 objects_list.append(post_history_insert['post_history'])
             
             if bulk_insert_count == MAX_BULK_ITEMS:
-                bulk_save_result = db_api.utils.bulk_save(session=session, obj_list=objects_list)
+                bulk_save_result = db_api.utils.bulk_add(session=session, obj_list=objects_list)
                 print('Commit post_history errors: {errors}'.format(**bulk_save_result))
                 print('Commit post_history result: {result}'.format(**bulk_save_result))
                 bulk_insert_count = 0
                 objects_list = []
     
     # Object not committed
-    session.bulk_save_objects(objects_list)
-    session.commit()
+    bulk_save_result = db_api.utils.bulk_add(session=session, obj_list=objects_list)
     #
 
 if __name__ == '__main__':
@@ -217,7 +225,7 @@ if __name__ == '__main__':
             site_name = dirname.replace(DATA_DIRECTORY,'')
             site = getattr(Sites, site_name)
             
-            parse_tags(session, site, dirname)
-            parse_users(session, site, dirname)
+            # parse_tags(session, site, dirname)
+            # parse_users(session, site, dirname)
             parse_posts(session, site, dirname)
             parse_post_history(session, site, dirname)

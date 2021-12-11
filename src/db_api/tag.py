@@ -50,6 +50,7 @@ def create(session, data, commit=True):
             session.add(tag)
             session.commit()
     except Exception as e:
+        session.rollback()
         errors.append(e)
         result = 0
         tag = None
