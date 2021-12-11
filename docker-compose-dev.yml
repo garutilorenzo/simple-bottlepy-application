@@ -10,6 +10,7 @@ services:
        - https_proxy=$http_proxy
     container_name: bottle
     environment:
+      - PATH=$PATH:/app/.local/bin/
       - PYTHONPATH=$PYTHONPATH:/app/src
       - BOTTLE_APP_ENVIRONMENT=dev
       - BOTTLE_APP_NAME=bottle

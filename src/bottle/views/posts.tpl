@@ -8,7 +8,7 @@
                 % for post in posts:
                 <div class="col-md-4 col-lg-4 mb-4">
                     <h4> 
-                        <a href="/post/{{ post.id }}/{{ post.clean_title }}" title="{{ post.title }}">{{ post.title }}</a>
+                        <a href="/post/{{ post.id }}/{{ post.clean_title }}" title="{{ post.title }}">{{ post.id }} {{ post.title }}</a>
                     </h4>
                       % if post.owner_user:
                       % user_name = post.owner_user.name

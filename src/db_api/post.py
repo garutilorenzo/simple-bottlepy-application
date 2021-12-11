@@ -1,5 +1,5 @@
 from sqlalchemy import func
-from schema.posts import Posts
+from schema.posts import Posts, PostType
 from . import tag
 from . import user
 
@@ -35,10 +35,11 @@ def get_all_filtered(session, offset=1, limit=50, filters={}, only_questions=Fal
     
     if only_questions:
         filters['parent_id'] = None
+        filters['post_type'] = PostType.question
     
     try:
         posts = session.query(Posts).filter_by(**filters)
-        count = len(posts.all())
+        count = posts.count()
 
         if limit:
             posts = posts.limit(limit)
@@ -49,6 +50,7 @@ def get_all_filtered(session, offset=1, limit=50, filters={}, only_questions=Fal
     except Exception as e:
         errors.append(e)
         posts = None
+        count = 0
     return {'errors': errors, 'result': posts, 'count': count}
 
 def count(session):        

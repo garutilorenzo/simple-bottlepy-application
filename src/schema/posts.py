@@ -80,7 +80,7 @@ class Posts(Base):
     
     tags = relationship("Tags", secondary=post_tag_association)
 
-    post_history = relationship("PostHistory", backref="posts")
+    post_history = relationship("PostHistory", back_populates="post")
 
     answer_count = Column(Integer, default=0)
     comment_count = Column(Integer, default=0)
@@ -99,7 +99,7 @@ class PostHistory(Base):
     post_history_id = Column(Integer) 
 
     post_id = Column(Integer, ForeignKey('posts.id'))
-    post = relationship("Posts", foreign_keys=[post_id])
+    post = relationship("Posts", foreign_keys=[post_id], back_populates="post_history")
 
     post_history_type = Column(ENUM(PostHistoryType), name="post_history_type")
     revision_guid = Column(String(40))
