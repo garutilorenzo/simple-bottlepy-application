@@ -1,20 +1,28 @@
-# As Scrapy runs on Python, I choose the official Python 3 Docker image.
-FROM python:3
+FROM python:3-alpine
 
-# PGSQL
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y libpq-dev && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache libpq-dev curl bash make gcc linux-headers musl-dev libc-dev g++
 
-# Set the working directory to /usr/src/app.
 WORKDIR /app/src
- 
-# Copy the file from the local host to the filesystem of the container at the working directory.
-COPY requirements.txt ./
- 
-# Install Scrapy specified in requirements.txt.
-RUN pip3 install --no-cache-dir -r requirements.txt\
-    && rm -rf ./requirements.txt
 
-RUN groupadd -g 1000 web
-RUN useradd -d /app/src -s /bin/bash -g web -u 1000 web
+RUN addgroup --gid 1000 web && \
+    adduser \
+    --disabled-password \
+    --gecos "" \
+    --home /app \
+    --ingroup web \
+    --no-create-home \
+    --uid 1000 \
+    web && \
+    chown -R 1000:1000 /app
+
+USER web
+COPY requirements.txt /app/requirements.txt
+RUN pip3 install --user --no-cache-dir -r /app/requirements.txt\
+    && rm -rf /app/requirements.txt
+
+COPY bash.bashrc /app/.bashrc
+
+USER root
+RUN apk del --no-network make gcc linux-headers musl-dev libc-dev g++
 
 USER web
