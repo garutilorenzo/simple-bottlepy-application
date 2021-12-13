@@ -1,12 +1,17 @@
 % include('header.tpl')
     <main class="container">
-        <h1>{{ post.title }}</h1>
         <div class="row justify-content-md-center">
-            <div class="col-12">
+            <div class="col-8">
+                <h1>{{ post.title }}</h1>
                 <p>
                     <span class="badge rounded-pill bg-primary">Views {{ post.view_count }}</span>
                     <span class="badge rounded-pill bg-success">Score {{ post.score }}</span>
                 </p>
+            </div>
+        </div>    
+        <div class="row justify-content-md-center">
+            <div class="col-8">
+                
                 % if post.post_history:
                 <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#postHistory">
                     Post History
@@ -59,7 +64,7 @@
             </div>
         </div>
         <div class="row justify-content-md-center">
-            <div class="col-12">
+            <div class="col-8">
                 {{! post.body }}
             </div>
         </div>
@@ -71,15 +76,17 @@
         </div>
 
         <hr class="mt-2 mb-5">
-        <h2>Answers</h2>
+        <div class="row justify-content-md-center">
+            <div class="col-8">
+                <h2>Answers</h2>
+            </div>
+        </div>
         % if post.answers:
         % for answer in post.answers:
-        <div class="row justify-content-md-center">
-            <span class="border border-1">
-            <div class="col-12">                
+        <div class="row justify-content-md-center mb-4">
+            <div class="col-8  border border-1">                
                 {{! answer.body }}
             </div>
-            </span>
         </div>
         % end
         % end

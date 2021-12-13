@@ -13,7 +13,7 @@ from schema.network import Sites
 from schema.posts import PostType
 
 DATA_DIRECTORY = '/data/'
-MAX_BULK_ITEMS = 1000
+MAX_BULK_ITEMS = 8000
 
 def clenaup_string(s, max_lenght=80):
     translate_string = s.\
@@ -212,20 +212,27 @@ def parse_post_history(session, site, dirname):
     #
 
 if __name__ == '__main__':
-    # site = Sites.vi
-    # print(site)
-    # with db_api.utils.db_session() as session:
-    #     # parse_tags(session, site)
-    #     # parse_users(session, site)
-    #     parse_posts(session, site)
-    #     parse_post_history(session, site)
     dirs = [x[0] for x in os.walk(DATA_DIRECTORY) if x[0] != DATA_DIRECTORY]
     for dirname in dirs:
         with db_api.utils.db_session() as session:
             site_name = dirname.replace(DATA_DIRECTORY,'')
             site = getattr(Sites, site_name)
-            
-            # parse_tags(session, site, dirname)
-            # parse_users(session, site, dirname)
+            parse_tags(session, site, dirname)
+    
+    for dirname in dirs:
+        with db_api.utils.db_session() as session:
+            site_name = dirname.replace(DATA_DIRECTORY,'')
+            site = getattr(Sites, site_name)
+            parse_users(session, site, dirname)
+    
+    for dirname in dirs:
+        with db_api.utils.db_session() as session:
+            site_name = dirname.replace(DATA_DIRECTORY,'')
+            site = getattr(Sites, site_name)
             parse_posts(session, site, dirname)
+    
+    for dirname in dirs:
+        with db_api.utils.db_session() as session:
+            site_name = dirname.replace(DATA_DIRECTORY,'')
+            site = getattr(Sites, site_name)
             parse_post_history(session, site, dirname)

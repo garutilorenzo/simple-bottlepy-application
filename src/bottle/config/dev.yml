@@ -8,3 +8,4 @@ pgsql_db: "bottle_exchange"
 pgsql_host: "pgsql"
 pgsql_port: 5432
 create_db_schema: True
+default_result_limit: 50

@@ -1,7 +1,10 @@
 % include('header.tpl')
     <main class="container">
         <div class="row">
-            <div class="col-12">
+          <div class="col-12 text-center">
+            <h1> Tags </h1>
+          </div>
+          <div class="col-12">
                 % include('pager.tpl')
                 <div class="row">
                   <!-- Portfolio Item 1 -->

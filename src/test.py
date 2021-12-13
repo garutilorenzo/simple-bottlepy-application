@@ -10,7 +10,11 @@ from schema.network import Sites
 
 if __name__ == '__main__':
     with db_api.utils.db_session() as session:
-        # user_result = db_api.user.get(session=session, data={'user_id': 4})
+        filters = {'network_name': 'tex',  'only_questions': True, 'tag': 'labels'}
+        filters_like = {'title': ''}
+        tags_result = db_api.post.get_all_filtered(session=session, filters=filters)
+        print(tags_result)
+        #print(tags_list)
         # user = user_result['result']
         # for post in user.posts:
         #     print(post.title)

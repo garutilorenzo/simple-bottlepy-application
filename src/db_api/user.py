@@ -14,7 +14,7 @@ def get(session, filters):
         user = None
     return {'errors': errors, 'result': user}
 
-def get_all(session, offset=1, limit=50):
+def get_all(session, offset=None, limit=None):
     errors = []
     try:
         users = session.query(Users).order_by(Users.id)

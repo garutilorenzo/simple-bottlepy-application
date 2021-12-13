@@ -1,4 +1,4 @@
-import os, sys, json
+import os, sys, json, urllib
 
 from bottle_sa import SQLAlchemyPlugin
 from schema.base import engine
@@ -30,19 +30,20 @@ SimpleTemplate.defaults["url"] = lambda: request.url
 SimpleTemplate.defaults["fullpath"] = lambda: request.fullpath
 SimpleTemplate.defaults["nav_pages"] = utils.build_nav_pages()
 SimpleTemplate.defaults["nav_dropdown_pages"] = utils.build_nav_dropdown_pages()
+SimpleTemplate.defaults["default_result_limit"] = main_config['default_result_limit']
 
 debug(main_config['enable_debug'])
 
 @app.route('/static/<filename:re:.*\.css>')
 def send_css(filename, db):
     response = static_file(filename, root=dirname+'/static/asset/css')
-    response.set_header("Cache-Control", "public, max-age=604800")
+    # response.set_header("Cache-Control", "public, max-age=604800")
     return response
 
 @app.route('/static/<filename:re:.*\.js>')
 def send_js(filename, db):
     response = static_file(filename, root=dirname+'/static/asset/js')
-    response.set_header("Cache-Control", "public, max-age=604800")
+    # response.set_header("Cache-Control", "public, max-age=604800")
     return response
 
 
@@ -78,7 +79,10 @@ def error404(db):
 @app.route('/')
 @view('index')
 def index(db):
-    return dict(page_name='home')
+    network_sites_result = db_api.network.get_all()
+    if not network_sites_result.get('error'):
+        network_sites = network_sites_result['result']
+    return dict(page_name='home', network_sites=network_sites)
 
 @app.route('/docs')
 @view('docs')
@@ -89,11 +93,10 @@ def index(db):
 @app.route('/users/<page_nr:int>')
 @view('users')
 def get_users(db, page_nr=1):
-    current_url = request.url
-    current_page = current_url.split('/')[3]
+    current_page = utils.get_first_level_url(request)
 
     users = []
-    users_result = db_api.user.get_all(offset=page_nr, session=db)
+    users_result = db_api.user.get_all(limit=main_config['default_result_limit'], offset=page_nr, session=db)
     if not users_result.get('errors'):
         users = users_result['result']
 
@@ -110,8 +113,7 @@ def get_users(db, page_nr=1):
 @app.route('/user/<id:int>/<user_name>')
 @view('user')
 def get_user(db, id=0, user_name=''):
-    current_url = request.url
-    current_page = current_url.split('/')[3]
+    current_page = utils.get_first_level_url(request)
 
     user_result = db_api.user.get(session=db, filters={'id': id})
     if not user_result.get('error'):
@@ -123,11 +125,10 @@ def get_user(db, id=0, user_name=''):
 @app.route('/tags/<page_nr:int>')
 @view('tags')
 def get_tags(db, page_nr=1):
-    current_url = request.url
-    current_page = current_url.split('/')[3]
+    current_page = utils.get_first_level_url(request)
 
     tags = []
-    tags_result = db_api.tag.get_all(offset=page_nr, session=db)
+    tags_result = db_api.tag.get_all(limit=main_config['default_result_limit'], offset=page_nr, session=db)
     if not tags_result.get('errors'):
         tags = tags_result['result']
 
@@ -141,39 +142,138 @@ def get_tags(db, page_nr=1):
     )
     return res
 
+@app.route('/posts', method='POST')
+@view('posts')
+def post_search_posts(db, page_nr=1):
+    
+    forms = request.POST.getall('searchQuestionForm')
+    network = request.forms.get('network_site')
+    question_tag = request.forms.get('question_tag')
+    question_title = request.forms.get('question_title')
+    
+    filters = {
+        'network_name': network if network else None,
+        'tag': question_tag.split(':::')[1] if question_tag else None,
+        'only_questions': True,
+    }
+
+    filters_like = {
+        'title': question_title if question_title else None,
+    }
+
+    current_page = utils.get_first_level_url(request)
+
+    posts = []
+    count_all_posts = 0
+    posts_result = db_api.post.get_all_filtered(
+        limit=main_config['default_result_limit'], 
+        offset=page_nr, session=db, 
+        filters=filters,
+        filters_like=filters_like,
+    )
+
+    if not posts_result.get('errors'):
+        posts = posts_result['result']
+        count_all_posts = posts_result['count']
+    
+    dict_parameters = {**filters, **filters_like}
+
+    res = dict(
+        page_name=current_page, 
+        posts=posts, 
+        records=count_all_posts, 
+        page_nr=page_nr,
+        parameters=urllib.parse.urlencode(dict_parameters),
+    )
+    return res
+
 @app.route('/posts')
 @app.route('/posts/<page_nr:int>')
 @view('posts')
 def get_posts(db, page_nr=1):
-    current_url = request.url
-    current_page = current_url.split('/')[3]
+    
+    raw_parameters = dict(request.query.decode())
+    filters = {
+        'network_name': raw_parameters.get('network_name', None),
+        'tag': raw_parameters.get('tag', None),
+        'only_questions':  raw_parameters.get('only_questions', None),
+    }
+
+    filters_like = {
+        'title': raw_parameters.get('title', None),
+    }
+
+    current_page = utils.get_first_level_url(request)
 
     posts = []
     count_all_posts = 0
-    posts_result = db_api.post.get_all_filtered(offset=page_nr, session=db, only_questions=True)
+    posts_result = db_api.post.get_all_filtered(
+        limit=main_config['default_result_limit'], 
+        offset=page_nr, session=db, 
+        filters=filters,
+        filters_like=filters_like,
+    )
+
     if not posts_result.get('errors'):
         posts = posts_result['result']
         count_all_posts = posts_result['count']
+
+    dict_parameters = {**filters, **filters_like}
     
     res = dict(
         page_name=current_page, 
         posts=posts, 
         records=count_all_posts, 
         page_nr=page_nr,
+         parameters=urllib.parse.urlencode(dict_parameters),
     )
     return res
 
 @app.route('/post/<id:int>/<post_title>')
 @view('post')
 def get_post(db, id=0, post_title=''):
-    current_url = request.url
-    current_page = current_url.split('/')[3]
+    current_page = utils.get_first_level_url(request)
 
     posts_result = db_api.post.get(session=db, filters={'id': id})
     if not posts_result.get('error'):
         post = posts_result['result']
     return dict(page_name=current_page , post=post)
 
+### API ###
+
+@app.route('/api/get_tags', method='POST')
+def api_get_tags(db):
+    out = {
+        'errors': [],
+        'result': [],
+        'count': 0
+    }
+    network_site = request.forms.get("network_site")
+    auth_key = request.forms.get("auth_key")
+    
+    if not auth_key or auth_key != 'f883af4981c6d.bcdb777cebe0ab5aa76,277ddca765f616c03a9c5629afcb5798!e1513':
+        response.status = 401
+        response.set_header("Content-Type", 'application/json')
+        error = {'error': 'access denied'}
+        return json.dumps(error, indent=4, sort_keys=True)
+
+    tags_result = db_api.tag.get_all_filtered(session=db, filters={'network_name': network_site})
+    if not tags_result.get('errors'):
+        out['count'] = tags_result['count']
+        for t in tags_result['result']:
+            t_dict = {
+                'value': '{}:::{}'.format(str(t.id), t.name),
+                'text': t.name
+            }
+            out['result'].append(t_dict)
+
+    else:
+        out['errors'].extend(tags_result['errors'])
+        
+
+    # return 200 Success
+    response.set_header("Content-Type", 'application/json')
+    return json.dumps(out, indent=4, sort_keys=True)
 
 if __name__ == '__main__':
     run(app, host='0.0.0.0', port=main_config.get('http_port', 8080), reloader=main_config['enable_reloader'], debug=main_config['enable_debug'])

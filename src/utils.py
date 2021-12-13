@@ -46,3 +46,8 @@ def get_post_history_type(post_history_id):
         if int(post_history_type.value) == post_history_id:
             return post_history_type
     return None
+
+def get_first_level_url(request):
+    current_url = request.url
+    first_level_url = current_url.split('/')[3]
+    return first_level_url

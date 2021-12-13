@@ -1,6 +1,9 @@
 % include('header.tpl')
     <main class="container">
         <div class="row">
+          <div class="col-12 text-center">
+            <h1> Users </h1>
+          </div>
             <div class="col-12">
                 % include('pager.tpl')
                 <table class="table">

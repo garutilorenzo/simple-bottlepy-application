@@ -14,9 +14,9 @@
     <!-- Bootstrap core CSS -->
     <link href="/static/bootstrap.min.css" rel="stylesheet">
 
-    
     <!-- Custom styles for this template -->
     <link href="/static/navbar-top-fixed.css" rel="stylesheet">
+    <link href="/static/custom.css" rel="stylesheet">
   </head>
   <body>
   % include('nav.tpl')

@@ -1,7 +1,10 @@
 from sqlalchemy import func
 from schema.posts import Posts, PostType
+from schema.tags import Tags
+
 from . import tag
 from . import user
+from . import network
 
 def get(session, filters):
     errors = []
@@ -15,7 +18,7 @@ def get(session, filters):
         post = None
     return {'errors': errors, 'result': post}
 
-def get_all(session, offset=1, limit=50):
+def get_all(session, offset=None, limit=None):
     errors = []
     try:
         posts = session.query(Posts)
@@ -30,15 +33,32 @@ def get_all(session, offset=1, limit=50):
         posts = None
     return {'errors': errors, 'result': posts}
 
-def get_all_filtered(session, offset=1, limit=50, filters={}, only_questions=False):
+def get_all_filtered(session, offset=None, limit=None, filters={}, filters_like={}):
     errors = []
     
-    if only_questions:
-        filters['parent_id'] = None
-        filters['post_type'] = PostType.question
+    query_filters = {}
+    filters_like_keys = [k for k in filters_like.keys()]
+    del_keys = ['only_questions', 'network_name', 'tag'] + filters_like_keys
+
+    for k in filters.keys():
+        if filters[k] and k not in del_keys:
+            query_filters[k] = filters[k]
+
+        if k == 'only_questions':
+            query_filters['parent_id'] = None
+            query_filters['post_type'] = PostType.question
+        if k == 'network_name':
+            site_result = network.get(network_name=filters['network_name'])
+            if not site_result.get('errors'):
+                query_filters['site'] = site_result['result']
     
     try:
-        posts = session.query(Posts).filter_by(**filters)
+        posts = session.query(Posts).filter_by(**query_filters)
+        if filters.get('tag'):
+            posts = posts.filter(Posts.tags.any(Tags.name == filters['tag']))
+        if filters_like.get('title') and filters_like['title']:
+            like_str = '%{title}%'.format(**filters_like)
+            posts = posts.filter(Posts.title.ilike(like_str))
         count = posts.count()
 
         if limit:
