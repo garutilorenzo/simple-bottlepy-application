@@ -10,9 +10,9 @@ from schema.network import Sites
 
 if __name__ == '__main__':
     with db_api.utils.db_session() as session:
-        filters = {'network_name': 'tex',  'only_questions': True, 'tag': 'labels'}
+        filters = {'network_name': 'tex', 'name': 'algorithms'}
         filters_like = {'title': ''}
-        tags_result = db_api.post.get_all_filtered(session=session, filters=filters)
+        tags_result = db_api.tag.get_json(session=session, offset=1, limit=200, filters=filters)
         print(tags_result)
         #print(tags_list)
         # user = user_result['result']

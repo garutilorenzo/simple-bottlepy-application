@@ -152,13 +152,13 @@ def post_search_posts(db, page_nr=1):
     question_title = request.forms.get('question_title')
     
     filters = {
-        'network_name': network if network else None,
-        'tag': question_tag.split(':::')[1] if question_tag else None,
+        'network_name': network if network else '',
+        'tag': question_tag.split(':::')[1] if question_tag else '',
         'only_questions': True,
     }
 
     filters_like = {
-        'title': question_title if question_title else None,
+        'title': question_title if question_title else '',
     }
 
     current_page = utils.get_first_level_url(request)
@@ -194,13 +194,13 @@ def get_posts(db, page_nr=1):
     
     raw_parameters = dict(request.query.decode())
     filters = {
-        'network_name': raw_parameters.get('network_name', None),
-        'tag': raw_parameters.get('tag', None),
-        'only_questions':  raw_parameters.get('only_questions', None),
+        'network_name': raw_parameters.get('network_name', ''),
+        'tag': raw_parameters.get('tag', ''),
+        'only_questions':  raw_parameters.get('only_questions', ''),
     }
 
     filters_like = {
-        'title': raw_parameters.get('title', None),
+        'title': raw_parameters.get('title', ''),
     }
 
     current_page = utils.get_first_level_url(request)
@@ -225,7 +225,7 @@ def get_posts(db, page_nr=1):
         posts=posts, 
         records=count_all_posts, 
         page_nr=page_nr,
-         parameters=urllib.parse.urlencode(dict_parameters),
+        parameters=urllib.parse.urlencode(dict_parameters),
     )
     return res
 
@@ -239,15 +239,12 @@ def get_post(db, id=0, post_title=''):
         post = posts_result['result']
     return dict(page_name=current_page , post=post)
 
-### API ###
+### API - UTILS ###
 
-@app.route('/api/get_tags', method='POST')
+@app.route('/api/autocomplete/form/get_tags', method='POST')
 def api_get_tags(db):
-    out = {
-        'errors': [],
-        'result': [],
-        'count': 0
-    }
+    result = {'errors': [], 'data': [], 'count': 0}
+
     network_site = request.forms.get("network_site")
     auth_key = request.forms.get("auth_key")
     
@@ -259,21 +256,78 @@ def api_get_tags(db):
 
     tags_result = db_api.tag.get_all_filtered(session=db, filters={'network_name': network_site})
     if not tags_result.get('errors'):
-        out['count'] = tags_result['count']
+        result['count'] = tags_result['count']
         for t in tags_result['result']:
             t_dict = {
                 'value': '{}:::{}'.format(str(t.id), t.name),
                 'text': t.name
             }
-            out['result'].append(t_dict)
+            result['data'].append(t_dict)
 
     else:
-        out['errors'].extend(tags_result['errors'])
+        result['errors'].extend(tags_result['errors'])
         
 
     # return 200 Success
     response.set_header("Content-Type", 'application/json')
-    return json.dumps(out, indent=4, sort_keys=True)
+    return json.dumps(result, indent=4, sort_keys=True)
+
+### END API - UTILS ###
+
+### API-REST ###
+
+@app.route('/api/get/tags', method='POST')
+def api_get_scenes(db):
+    result = {'errors': [], 'data': []}
+    params = ['tag_name', 'network_name', 'auth_key']
+   
+    # parse input data
+    try:
+        data = request.json
+    except ValueError:
+        response.status = 400
+        response.set_header("Content-Type", 'application/json')
+        result['errors'].append('Value error, only application/json objects acepted')
+        return json.dumps(result, indent=4, sort_keys=True)
+    
+    
+    for key in data.keys():
+        if key not in params:
+            response.status = 400
+            response.set_header("Content-Type", 'application/json')
+            result['errors'].append('{} params not acepted'.format(key))
+            return json.dumps(result, indent=4, sort_keys=True)
+    
+    for value in params:
+        data[value] = data.get(value, '')
+    
+    data['page'] = int(data.get('page', 1))
+    data['limit'] = int(data.get('limit', 200))
+    if data['limit'] > 200:
+        data['limit'] = 200
+    if not data['auth_key'] or data['auth_key'] != 'dd4d5ff1c13!28356236c402d7ada.aed8b797ebd299b942291bc66,f804492be2009f14':
+        response.status = 401
+        response.set_header("Content-Type", 'application/json')
+        result['errors'].append('access denied')
+        return json.dumps(result, indent=4, sort_keys=True)
+
+    filters = {
+        'network_name': data['network_name'],
+        'name': data['tag_name'],
+    }
+    tags_result = db_api.tag.get_json(session=db, offset=data['page'], limit=data['limit'])
+    if not tags_result.get('errors'):
+        result['data'].extend(tags_result['data'])
+        result['items'] = tags_result['items']
+        result['last_page'] = tags_result['last_page']
+    else:
+        result['errors'].extend(tags_result['errors'])
+
+    # return 200 Success
+    response.set_header("Content-Type", 'application/json')
+    return json.dumps(result, indent=4, sort_keys=True)
+
+### END API-REST ###
 
 if __name__ == '__main__':
     run(app, host='0.0.0.0', port=main_config.get('http_port', 8080), reloader=main_config['enable_reloader'], debug=main_config['enable_debug'])

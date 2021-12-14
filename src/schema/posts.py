@@ -89,6 +89,9 @@ class Posts(Base):
     created_time = Column(DateTime(timezone=True))
     updated_time = Column(DateTime(timezone=True), onupdate=func.now())
 
+    def as_dict(self):
+       return {c.name: str(getattr(self, 'site' if c.name == 'network_sites' else c.name)) for c in self.__table__.columns if c.name}
+
 class PostHistory(Base):
     __tablename__ = 'post_history'
 
@@ -112,3 +115,6 @@ class PostHistory(Base):
 
     created_time = Column(DateTime(timezone=True))
     updated_time = Column(DateTime(timezone=True), onupdate=func.now())
+
+    def as_dict(self):
+       return {c.name: str(getattr(self, 'site' if c.name == 'network_sites' else c.name)) for c in self.__table__.columns if c.name}

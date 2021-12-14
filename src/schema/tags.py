@@ -20,3 +20,6 @@ class Tags(Base):
     questions = Column(Integer)
     created_time = Column(DateTime(timezone=True), server_default=func.now())
     updated_time = Column(DateTime(timezone=True), onupdate=func.now())
+
+    def as_dict(self):
+       return {c.name: str(getattr(self, 'site' if c.name == 'network_sites' else c.name)) for c in self.__table__.columns if c.name}

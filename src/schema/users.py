@@ -44,3 +44,6 @@ class Users(Base):
     last_access_time = Column(DateTime(timezone=True))
     created_time = Column(DateTime(timezone=True))
     updated_time = Column(DateTime(timezone=True), onupdate=func.now())
+
+    def as_dict(self):
+       return {c.name: str(getattr(self, 'site' if c.name == 'network_sites' else c.name)) for c in self.__table__.columns if c.name}

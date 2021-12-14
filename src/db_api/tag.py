@@ -18,6 +18,7 @@ def get_all(session, offset=None, limit=None):
     errors = []
     try:
         tags = session.query(Tags)
+        count = tags.count()
         if limit:
             tags = tags.limit(limit)
 
@@ -27,19 +28,25 @@ def get_all(session, offset=None, limit=None):
     except Exception as e:
         errors.append(e)
         tags = None
-    return {'errors': errors, 'result': tags}
+        count = 0
+    return {'errors': errors, 'result': tags, 'count': count}
 
 def get_all_filtered(session, offset=None, limit=None, filters={}):
     errors = []
 
-    if filters.get('network_name'):
-        site_result = network.get(network_name=filters['network_name'])
-        if not site_result.get('errors'):
-            filters['site'] = site_result['result']
-        del filters['network_name']
-    
+    query_filters = {}
+    del_keys = ['network_name']
+
+    for k in filters.keys():
+        if filters[k] and k not in del_keys:
+            query_filters[k] = filters[k]
+
+        if k == 'network_name':
+            site_result = network.get(network_name=filters['network_name'])
+            if not site_result.get('errors'):
+                query_filters['site'] = site_result['result']
     try:
-        tags = session.query(Tags).filter_by(**filters)
+        tags = session.query(Tags).filter_by(**query_filters)
         count = tags.count()
         if limit:
             tags = tags.limit(limit)
@@ -53,6 +60,24 @@ def get_all_filtered(session, offset=None, limit=None, filters={}):
         count = 0
 
     return {'errors': errors, 'result': tags, 'count': count}
+
+def get_json(session, offset=None, limit=None, filters={}):
+    result = {'errors': [], 'data': [], 'last_page': 0, 'items': 0}
+    
+    if filters:
+        tags_result = get_all_filtered(session=session, offset=offset, limit=limit, filters=filters)
+    else:
+        tags_result = get_all(session=session, offset=offset, limit=limit)
+
+    if not tags_result.get('errors'):
+        result['items'] =  tags_result['count']
+        result['last_page'] =  int(tags_result['count']/limit)
+        for tag in tags_result['result']:
+            result['data'].append(tag.as_dict())
+    else:
+        result['errors'].extend(tags_result['errors'])
+        return result
+    return result
 
 def count(session):        
     return session.query(func.count(Tags.id)).scalar() 

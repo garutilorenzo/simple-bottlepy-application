@@ -1,6 +1,7 @@
 from xml.etree.ElementTree import iterparse
 
 import json,csv,re,os
+from multiprocessing import Process
 
 from sqlalchemy.sql.expression import insert
 import xmltodict
@@ -13,7 +14,7 @@ from schema.network import Sites
 from schema.posts import PostType
 
 DATA_DIRECTORY = '/data/'
-MAX_BULK_ITEMS = 8000
+MAX_BULK_ITEMS = 4000
 
 def clenaup_string(s, max_lenght=80):
     translate_string = s.\
@@ -97,16 +98,20 @@ def parse_users(session, site, dirname):
             if not user_insert.get('error'):
                 bulk_insert_count +=1
                 objects_list.append(user_insert['user'])
+            else:
+                print(user_insert['error'])
+                print(site.name)
             
             if bulk_insert_count == MAX_BULK_ITEMS:
-                bulk_save_result = db_api.utils.bulk_add(session=session, obj_list=objects_list)
+                bulk_save_result = db_api.utils.bulk_save(session=session, obj_list=objects_list)
+                print('Site name' + site.name)
                 print('Commit user errors: {errors}'.format(**bulk_save_result))
                 print('Commit user result: {result}'.format(**bulk_save_result))
                 bulk_insert_count = 0
                 objects_list = []
     
     # Object not committed
-    bulk_save_result = db_api.utils.bulk_add(session=session, obj_list=objects_list)
+    bulk_save_result = db_api.utils.bulk_save(session=session, obj_list=objects_list)
     #
 
 def parse_posts(session, site, dirname):
@@ -201,38 +206,75 @@ def parse_post_history(session, site, dirname):
                 objects_list.append(post_history_insert['post_history'])
             
             if bulk_insert_count == MAX_BULK_ITEMS:
-                bulk_save_result = db_api.utils.bulk_add(session=session, obj_list=objects_list)
+                bulk_save_result = db_api.utils.bulk_save(session=session, obj_list=objects_list)
                 print('Commit post_history errors: {errors}'.format(**bulk_save_result))
                 print('Commit post_history result: {result}'.format(**bulk_save_result))
                 bulk_insert_count = 0
                 objects_list = []
     
     # Object not committed
-    bulk_save_result = db_api.utils.bulk_add(session=session, obj_list=objects_list)
+    bulk_save_result = db_api.utils.bulk_save(session=session, obj_list=objects_list)
     #
+
+
+def import_multiprocess(dirs):
+    
+    with db_api.utils.db_session() as session:
+        jobs = []
+        for dirname in dirs:
+            site_name = dirname.replace(DATA_DIRECTORY,'')
+            site = getattr(Sites, site_name)
+            p = Process(target=parse_tags, args=(session,site,dirname))
+            jobs.append(p)
+            p.start()
+            
+        for job in jobs:
+            job.join()
+    
+    print('Finish import tags')
+
+    with db_api.utils.db_session() as session:
+        jobs = []
+        for dirname in dirs:
+            site_name = dirname.replace(DATA_DIRECTORY,'')
+            site = getattr(Sites, site_name)
+            p = Process(target=parse_users, args=(session,site,dirname))
+            jobs.append(p)
+            p.start()
+            
+        for job in jobs:
+            job.join()
+    
+    print('Finish import users')
+
+    with db_api.utils.db_session() as session:
+        jobs = []
+        for dirname in dirs:
+            site_name = dirname.replace(DATA_DIRECTORY,'')
+            site = getattr(Sites, site_name)
+            p = Process(target=parse_posts, args=(session,site,dirname))
+            jobs.append(p)
+            p.start()
+            
+        for job in jobs:
+            job.join()
+    
+    print('Finish import posts')
+
+    with db_api.utils.db_session() as session:
+        jobs = []
+        for dirname in dirs:
+            site_name = dirname.replace(DATA_DIRECTORY,'')
+            site = getattr(Sites, site_name)
+            p = Process(target=parse_post_history, args=(session,site,dirname))
+            jobs.append(p)
+            p.start()
+            
+        for job in jobs:
+            job.join()
+    
+    print('Finish import post_history')
 
 if __name__ == '__main__':
     dirs = [x[0] for x in os.walk(DATA_DIRECTORY) if x[0] != DATA_DIRECTORY]
-    for dirname in dirs:
-        with db_api.utils.db_session() as session:
-            site_name = dirname.replace(DATA_DIRECTORY,'')
-            site = getattr(Sites, site_name)
-            parse_tags(session, site, dirname)
-    
-    for dirname in dirs:
-        with db_api.utils.db_session() as session:
-            site_name = dirname.replace(DATA_DIRECTORY,'')
-            site = getattr(Sites, site_name)
-            parse_users(session, site, dirname)
-    
-    for dirname in dirs:
-        with db_api.utils.db_session() as session:
-            site_name = dirname.replace(DATA_DIRECTORY,'')
-            site = getattr(Sites, site_name)
-            parse_posts(session, site, dirname)
-    
-    for dirname in dirs:
-        with db_api.utils.db_session() as session:
-            site_name = dirname.replace(DATA_DIRECTORY,'')
-            site = getattr(Sites, site_name)
-            parse_post_history(session, site, dirname)
+    import_multiprocess(dirs)
