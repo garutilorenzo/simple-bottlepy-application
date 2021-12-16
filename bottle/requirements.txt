@@ -4,6 +4,7 @@ SQLAlchemy
 bottle
 uwsgi
 pyyaml
-# redis
+redis
+rom
 # boto3
 # awscli
