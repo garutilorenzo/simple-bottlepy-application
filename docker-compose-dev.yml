@@ -22,6 +22,7 @@ services:
       - 8080:8080
     depends_on:
       - pgsql
+      - redis
     logging:
       driver: "json-file"
       options:
@@ -48,18 +49,15 @@ services:
         max-file: "5"
     restart: always
 
-  # redis:
-  #   image: redis:6-alpine
-  #   container_name: redis
-  #   networks:
-  #     - monitoring
-  #     - backend
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "1m"
-  #       max-file: "5"
-  #   restart: always
+  redis:
+    image: redis:6-alpine
+    container_name: redis
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "5"
+    restart: always
 
 volumes:
   postgres:

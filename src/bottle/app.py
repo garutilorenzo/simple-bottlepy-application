@@ -1,6 +1,7 @@
 import os, sys, json, urllib
 
 from bottle_sa import SQLAlchemyPlugin
+from bottle_cache import RedisCache
 from schema.base import engine
 from schema.base import Base
 
@@ -25,6 +26,9 @@ saPlugin = SQLAlchemyPlugin(
 )
 application.install(saPlugin)
 
+# Cache
+cache = RedisCache()
+
 # Template default variables
 SimpleTemplate.defaults["url"] = lambda: request.url
 SimpleTemplate.defaults["fullpath"] = lambda: request.fullpath
@@ -37,15 +41,20 @@ debug(main_config['enable_debug'])
 @app.route('/static/<filename:re:.*\.css>')
 def send_css(filename, db):
     response = static_file(filename, root=dirname+'/static/asset/css')
-    # response.set_header("Cache-Control", "public, max-age=604800")
+    response.set_header("Cache-Control", "public, max-age=604800")
     return response
 
 @app.route('/static/<filename:re:.*\.js>')
 def send_js(filename, db):
     response = static_file(filename, root=dirname+'/static/asset/js')
-    # response.set_header("Cache-Control", "public, max-age=604800")
+    response.set_header("Cache-Control", "public, max-age=604800")
     return response
 
+@app.route('/static/<filename:re:.*\.map>')
+def send_js(filename, db):
+    response = static_file(filename, root=dirname+'/static/asset/map_files')
+    response.set_header("Cache-Control", "public, max-age=604800")
+    return response
 
 @app.route('/static/img/<filename:path>')
 def send_img(filename, db):
@@ -123,6 +132,7 @@ def get_user(db, id=0, user_name=''):
 
 @app.route('/tags')
 @app.route('/tags/<page_nr:int>')
+@cache.cached()
 @view('tags')
 def get_tags(db, page_nr=1):
     current_page = utils.get_first_level_url(request)
@@ -143,6 +153,7 @@ def get_tags(db, page_nr=1):
     return res
 
 @app.route('/posts', method='POST')
+@cache.cached()
 @view('posts')
 def post_search_posts(db, page_nr=1):
     
@@ -189,6 +200,7 @@ def post_search_posts(db, page_nr=1):
 
 @app.route('/posts')
 @app.route('/posts/<page_nr:int>')
+@cache.cached()
 @view('posts')
 def get_posts(db, page_nr=1):
     
@@ -277,7 +289,8 @@ def api_get_tags(db):
 ### API-REST ###
 
 @app.route('/api/get/tags', method='POST')
-def api_get_scenes(db):
+@cache.cached(content_type='application/json')
+def api_get_tags(db):
     result = {'errors': [], 'data': []}
     params = ['tag_name', 'network_name', 'auth_key']
    
