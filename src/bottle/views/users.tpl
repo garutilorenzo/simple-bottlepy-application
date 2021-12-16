@@ -20,6 +20,7 @@
                     </thead>
                     <tbody>
                     % for user in users:
+                    % site_name = user.site.name if hasattr(user.site, 'name') else user.site
                       <tr>
                         <th scope="row">{{ user.user_id }}</th>
                         <td><a href="/user/{{ user.id }}/{{ user.clean_name }}" title="{{ user.name }} detail page">{{ user.name }}</a></td>
@@ -27,7 +28,7 @@
                         <td>{{ user.views }}</td>
                         <td>{{ user.up_votes }}</td>
                         <td>{{ user.down_votes }}</td>
-                        <td>{{ user.site.name }}</td>
+                        <td>{{ site_name }}</td>
                       </tr>
                     %end
                     </tbody>

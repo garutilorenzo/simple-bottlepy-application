@@ -13,11 +13,11 @@
                     <p> 
                         {{ post.title }}
                     </p>
-                      % if post.owner_user:
-                      % user_name = post.owner_user.name
+                      % if post.owner:
+                      % user_name = post.owner.name
                       <p class="custom-font-size-small">
-                        <a href="/user/{{ post.owner_user.id }}/{{  post.owner_user.clean_name }}" title="{{ post.owner_user.clean_name }} detail page">{{  post.owner_user.name }}</a>
-                        <span class="badge rounded-pill bg-primary">{{ post.owner_user.reputation }}</span>
+                        <a href="/user/{{ post.owner.id }}/{{  post.owner.clean_name }}" title="{{ post.owner.clean_name }} detail page">{{  post.owner.name }}</a>
+                        <span class="badge rounded-pill bg-primary">{{ post.owner.reputation }}</span>
                       </p>
                       % end
                       <p>

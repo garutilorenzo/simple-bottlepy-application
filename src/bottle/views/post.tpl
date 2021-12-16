@@ -38,6 +38,7 @@
                                 <tbody>
                                     % count = 0
                                     % for event in post.post_history:
+                                    % event_type = event.post_history_type.name if hasattr(event.post_history_type, 'name') else event.post_history_type
                                     % count +=1
                                     <tr>
                                         <th scope="row">{{ count }}</th>
@@ -46,7 +47,7 @@
                                         % elif event.comment:
                                         <td>{{ event.comment }}</td>
                                         % end
-                                        <td>{{ event.post_history_type.name }}</td>
+                                        <td>{{ event_type }}</td>
                                         <td>{{ event.revision_guid }}</td>
                                         <td>{{ event.created_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                                     </tr>
