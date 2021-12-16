@@ -72,11 +72,11 @@ class Posts(Base):
     view_count = Column(Integer, default=0)
     body = Column(Text)
     
-    owner_user_id = Column(Integer, ForeignKey('users.id'))
-    owner_user = relationship("Users", foreign_keys=[owner_user_id], back_populates="posts")
+    owner_id = Column(Integer, ForeignKey('users.id'))
+    owner = relationship("Users", foreign_keys=[owner_id], back_populates="posts")
 
-    last_editor_user_id = Column(Integer, ForeignKey('users.id'))
-    last_editor_user = relationship("Users", foreign_keys=[last_editor_user_id], back_populates="edited_posts")
+    editor_id = Column(Integer, ForeignKey('users.id'))
+    editor = relationship("Users", foreign_keys=[editor_id], back_populates="edited_posts")
     
     tags = relationship("Tags", secondary=post_tag_association)
 

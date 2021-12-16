@@ -32,13 +32,13 @@ class Users(Base):
 
     posts = relationship(
         "Posts",
-        foreign_keys=[Posts.owner_user_id],
-        back_populates="owner_user",
+        foreign_keys=[Posts.owner_id],
+        back_populates="owner",
     )
     edited_posts = relationship(
         "Posts",
-        foreign_keys=[Posts.last_editor_user_id],
-        back_populates="last_editor_user",
+        foreign_keys=[Posts.editor_id],
+        back_populates="editor",
     )
 
     last_access_time = Column(DateTime(timezone=True))
