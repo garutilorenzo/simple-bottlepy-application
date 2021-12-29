@@ -4,7 +4,6 @@ import json,csv,re,os
 from multiprocessing import Process
 
 from sqlalchemy.sql.expression import insert
-import xmltodict
 import xml.etree.ElementTree as ET
 
 import utils
@@ -38,14 +37,6 @@ def my_xml_to_dict(filename):
 
             elem.clear()
             yield new_dict
-
-# def xml_to_dict(filename):
-#     xml_tree = ET.parse(filename)
-
-#     root = xml_tree.getroot()
-#     to_string  = ET.tostring(root, encoding='UTF-8', method='xml')
-
-#     return xmltodict.parse(to_string)
 
 def parse_tags(session, site, dirname):
     filename = '{}/Tags.xml'.format(dirname)
