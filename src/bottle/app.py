@@ -132,7 +132,7 @@ def get_user(db, id=0, user_name=''):
 
 @app.route('/tags')
 @app.route('/tags/<page_nr:int>')
-#@cache.cached()
+@cache.cached()
 @view('tags')
 def get_tags(db, page_nr=1):
     current_page = utils.get_first_level_url(request)
@@ -153,7 +153,7 @@ def get_tags(db, page_nr=1):
     return res
 
 @app.route('/posts', method='POST')
-#@cache.cached()
+@cache.cached()
 @view('posts')
 def post_search_posts(db, page_nr=1):
     
@@ -200,7 +200,7 @@ def post_search_posts(db, page_nr=1):
 
 @app.route('/posts')
 @app.route('/posts/<page_nr:int>')
-#@cache.cached()
+@cache.cached()
 @view('posts')
 def get_posts(db, page_nr=1):
     
