@@ -114,7 +114,7 @@ class Sites(enum.Enum):
     tex = 'tex.stackexchange.com'
 ```
 
-Onche the data is downloaded we can import the data:
+Once the data is downloaded we can import the data:
 
 ```bash
 docker-compose run --rm bottle bash
