@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 
 *.7z
+*.gz
 data/*.xml
 data/*/*.xml
 data/*/*.7z
