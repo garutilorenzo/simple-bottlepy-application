@@ -105,6 +105,7 @@
         <div class="row justify-content-md-center mb-4" id="answer-id-{{ answer.post_id }}">
             <div class="col-12  border border-1">                
                 {{! answer.body }}
+                % if answer.owner:
                 <div class="row">
                     <div class="col-2 custom-font-size-small">
                         Answered by:
@@ -130,6 +131,7 @@
                     </div>
                     % end
                 </div>
+                % end
             </div>
         </div>
         % end
