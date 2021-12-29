@@ -1,10 +1,31 @@
 from schema.posts import PostType, PostHistoryType
 from schema.network import Sites
 
+META_COSTRAINT = {
+    'base': 'A very simple BottlePy application with SqlAlchemy support',
+    'base_page': 'A very simple BottlePy application with SqlAlchemy support - {}',
+}
+
+class Meta(object):
+    def __init__(self, title, description):
+        self.title = title
+        self.description = description
+
 class StaticPage(object):
     def __init__(self, name, url):
         self.name = name
         self.url = url
+
+def build_meta(page_name=None, title=None):
+    if title:
+        title = title[:80]
+        description = title[:150]
+    elif page_name:
+        title = description = META_COSTRAINT['base_page'].format(page_name)
+    else:
+        title = description = META_COSTRAINT['base']
+    meta = Meta(title=title, description=description)
+    return meta
 
 def build_nav_pages():
     pages = []
@@ -49,5 +70,7 @@ def get_post_history_type(post_history_id):
 
 def get_first_level_url(request):
     current_url = request.url
-    first_level_url = current_url.split('/')[3]
+    first_level_url = current_url.\
+        split('/')[3].\
+        split('?', 1)[0]
     return first_level_url

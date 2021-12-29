@@ -4,9 +4,9 @@
         <div class="row justify-content-md-center">
             <div class="col-12">
                 <p>
-                    <span class="badge rounded-pill bg-primary">Views {{ user.views }}</span>
-                    <span class="badge rounded-pill bg-success">UP Votes {{ user.up_votes }}</span>
-                    <span class="badge rounded-pill bg-danger">DOWN Votes {{ user.down_votes}}</span>
+                    Views <span class="badge rounded-pill bg-primary">{{ user.views }}</span>
+                    UP Votes <span class="badge rounded-pill bg-success">{{ user.up_votes }}</span>
+                    DOWN Votes <span class="badge rounded-pill bg-danger">{{ user.down_votes}}</span>
                 </p>
                 % if user.website:
                 <p>

@@ -133,6 +133,7 @@ def create(session, data, add=True, commit=True):
             score=data.get('score', 0),
             view_count=data.get('view_count', 0),
             parent_id=question_obj.id if question_obj else None,
+            accepted_answer_id=data.get('accepted_answer_id', 0),
             body=data.get('body'),
             owner_id=owner_obj.id if owner_obj else None,
             editor_id=editor_obj.id if editor_obj else None,

@@ -1,0 +1,10 @@
+---
+enable_debug: False
+enable_reloader: False
+pgsql_username: "bottle"
+pgsql_password: "b0tTl3_Be#"
+pgsql_db: "bottle_exchange"
+pgsql_host: "pgsql"
+pgsql_port: 5432
+create_db_schema: False
+default_result_limit: 50

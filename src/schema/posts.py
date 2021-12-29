@@ -62,6 +62,7 @@ class Posts(Base):
     clean_title = Column(String(80))
     
     post_id = Column(Integer)
+    accepted_answer_id = Column(Integer)
 
     parent_id = Column(Integer, ForeignKey('posts.id'))
     question = relationship("Posts", remote_side=[id], backref='answers')

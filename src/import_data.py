@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import iterparse
 
-import json,csv,re,os
+import json,csv,re,os,time
 from multiprocessing import Process
 
 from sqlalchemy.sql.expression import insert
@@ -28,6 +28,21 @@ def clenaup_string(s, max_lenght=80):
         result = ''.join(clean_string.rsplit('-', 1))
     return result.lower()[:max_lenght]
 
+def count_rows(filename):
+    num_lines = sum(1 for line in open(filename) if '<row' in line)
+    return num_lines
+
+def console_log(site, entity, count, start, items_count):
+    time_reset = False
+    if count % 200 == 0:
+        time_diff = time.time() - start
+        print('Site name-entity: {}-{}'.format(site.name, entity))
+        print('Parsed 200 items in: {}'.format(time_diff))
+        print('Remaining items: {}'.format(items_count - count))
+        print('-'*90)
+        time_reset = True
+    return time_reset
+
 def my_xml_to_dict(filename):
     for _, elem in iterparse(filename, events=("end",)):
         if elem.tag == "row":
@@ -41,7 +56,11 @@ def my_xml_to_dict(filename):
 def parse_tags(session, site, dirname):
     filename = '{}/Tags.xml'.format(dirname)
     res = my_xml_to_dict(filename)
-        
+    
+    tags_start = time.time()
+    tags_counter = 0
+    tags_count = count_rows(filename)
+
     for r in res:
         search_data = {'tag_id': r['@Id'], 'site': site, 'name': r['@TagName']}
         tag_result = db_api.tag.get(session=session, filters=search_data)
@@ -55,7 +74,13 @@ def parse_tags(session, site, dirname):
                 'questions': r['@Count'],
             }
             tag_insert = db_api.tag.create(session=session, data=insert_data)
-            print(tag_insert['result'])
+            
+            # LOG
+            tags_counter +=1
+            time_reset = console_log(site, 'tags', tags_counter, tags_start, tags_count)
+            if time_reset:
+                tags_start = time.time()
+            # END-LOG
 
 def parse_users(session, site, dirname):
     bulk_insert_count = 0
@@ -64,6 +89,10 @@ def parse_users(session, site, dirname):
     filename = '{}/Users.xml'.format(dirname)
     res = my_xml_to_dict(filename)
     
+    users_start = time.time()
+    users_counter = 0
+    users_count = count_rows(filename)
+
     for r in res:
         search_data = {'user_id': r['@Id'], 'site': site, 'name': r['@DisplayName']}
         user_result = db_api.user.get(session=session, filters=search_data)
@@ -93,9 +122,15 @@ def parse_users(session, site, dirname):
                 print(user_insert['error'])
                 print(site.name)
             
+            # LOG
+            users_counter +=1
+            time_reset = console_log(site, 'users', users_counter, users_start, users_count)
+            if time_reset:
+                users_start = time.time()
+            # END-LOG
+
             if bulk_insert_count == MAX_BULK_ITEMS:
                 bulk_save_result = db_api.utils.bulk_save(session=session, obj_list=objects_list)
-                print('Site name' + site.name)
                 print('Commit user errors: {errors}'.format(**bulk_save_result))
                 print('Commit user result: {result}'.format(**bulk_save_result))
                 bulk_insert_count = 0
@@ -112,6 +147,10 @@ def parse_posts(session, site, dirname):
     filename = '{}/Posts.xml'.format(dirname)
     res = my_xml_to_dict(filename)
     
+    posts_start = time.time()
+    posts_counter = 0
+    posts_count = count_rows(filename)
+
     for r in res:
               
         search_data = {'post_id': r['@Id'], 'site': site, 'title': r.get('@Title', '')}
@@ -134,6 +173,7 @@ def parse_posts(session, site, dirname):
                 'score': int(r['@Score']),
                 'view_count': int(r.get('@ViewCount', 0)),
                 'parent_id': int(r.get('@ParentId', 0)),
+                'accepted_answer_id': int(r.get('@AcceptedAnswerId', 0)),
                 'body': r.get('@Body', ''),
                 'owner_user_id': int(r.get('@OwnerUserId', 0)),
                 'last_editor_user_id': int(r.get('@LastEditorUserId', 0)),
@@ -155,6 +195,13 @@ def parse_posts(session, site, dirname):
             if not post_insert.get('error'):
                 bulk_insert_count +=1
             
+            # LOG
+            posts_counter +=1
+            time_reset = console_log(site, 'posts', posts_counter, posts_start, posts_count)
+            if time_reset:
+                posts_start = time.time()
+            # END-LOG
+
             if bulk_insert_count == MAX_BULK_ITEMS:
                 bulk_save_result = db_api.utils.commit(session=session)
                 print('Commit post errors: {errors}'.format(**bulk_save_result))
@@ -169,7 +216,11 @@ def parse_post_history(session, site, dirname):
 
     filename = '{}/PostHistory.xml'.format(dirname)
     res = my_xml_to_dict(filename)
-    
+
+    post_h_start = time.time()
+    post_h_counter = 0
+    post_h_count = count_rows(filename)
+
     for r in res:
         
         search_data = {'post_history_id': r['@Id'], 'site': site, 'post_id': int(r['@PostId'])}
@@ -196,6 +247,13 @@ def parse_post_history(session, site, dirname):
                 bulk_insert_count +=1
                 objects_list.append(post_history_insert['post_history'])
             
+             # LOG
+            post_h_counter +=1
+            time_reset = console_log(site, 'post_history', post_h_counter, post_h_start, post_h_count)
+            if time_reset:
+                post_h_start = time.time()
+            # END-LOG
+
             if bulk_insert_count == MAX_BULK_ITEMS:
                 bulk_save_result = db_api.utils.bulk_save(session=session, obj_list=objects_list)
                 print('Commit post_history errors: {errors}'.format(**bulk_save_result))

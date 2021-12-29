@@ -2,8 +2,7 @@ import os, sys, json, urllib
 
 from bottle_sa import SQLAlchemyPlugin
 from bottle_cache import RedisCache
-from schema.base import engine
-from schema.base import Base
+from schema.base import Base, engine
 
 from bottle import Bottle, run, \
      template, view, debug, static_file, request, response, redirect, TEMPLATE_PATH, SimpleTemplate
@@ -33,6 +32,7 @@ cache = RedisCache()
 SimpleTemplate.defaults["url"] = lambda: request.url
 SimpleTemplate.defaults["fullpath"] = lambda: request.fullpath
 SimpleTemplate.defaults["nav_pages"] = utils.build_nav_pages()
+SimpleTemplate.defaults["get_meta"] = utils.build_meta
 SimpleTemplate.defaults["nav_dropdown_pages"] = utils.build_nav_dropdown_pages()
 SimpleTemplate.defaults["default_result_limit"] = main_config['default_result_limit']
 
@@ -132,7 +132,7 @@ def get_user(db, id=0, user_name=''):
 
 @app.route('/tags')
 @app.route('/tags/<page_nr:int>')
-@cache.cached()
+#@cache.cached()
 @view('tags')
 def get_tags(db, page_nr=1):
     current_page = utils.get_first_level_url(request)
@@ -153,7 +153,7 @@ def get_tags(db, page_nr=1):
     return res
 
 @app.route('/posts', method='POST')
-@cache.cached()
+#@cache.cached()
 @view('posts')
 def post_search_posts(db, page_nr=1):
     
@@ -200,7 +200,7 @@ def post_search_posts(db, page_nr=1):
 
 @app.route('/posts')
 @app.route('/posts/<page_nr:int>')
-@cache.cached()
+#@cache.cached()
 @view('posts')
 def get_posts(db, page_nr=1):
     

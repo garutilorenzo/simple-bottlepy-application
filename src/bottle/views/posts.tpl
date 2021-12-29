@@ -11,15 +11,23 @@
                 % for post in posts:
                 <div class="col-md-4 col-lg-4 mb-4">
                     <p> 
-                        {{ post.title }}
+                      % if post.score >= 0:
+                      % badge_css = 'bg-success'
+                      % else:
+                      % badge_css = 'bg-danger'
+                      % end
+                      <span class="badge rounded-pill {{ badge_css }}">{{ post.score }}</span> {{ post.title }} 
                     </p>
-                      % if post.owner:
-                      % user_name = post.owner.name
                       <p class="custom-font-size-small">
+                        % if post.owner:
+                        % user_name = post.owner.name
                         <a href="/user/{{ post.owner.id }}/{{  post.owner.clean_name }}" title="{{ post.owner.clean_name }} detail page">{{  post.owner.name }}</a>
                         <span class="badge rounded-pill bg-primary">{{ post.owner.reputation }}</span>
+                        % end
+                        % if post.accepted_answer_id:
+                        <span class="badge rounded-pill bg-info">Answered</span>
+                        % end
                       </p>
-                      % end
                       <p>
                         <a href="/post/{{ post.id }}/{{ post.clean_title }}" class="btn btn-primary btn-sm" title="{{ post.title }}">Detail</a>
                       </p>

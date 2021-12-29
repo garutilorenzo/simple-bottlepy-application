@@ -3,11 +3,13 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
+    % title = post.title if defined('post') else ''
+    % meta = get_meta(page_name=page_name, title=title)
+    <meta name="description" content="{{ meta.description }}">
     <meta name="author" content="Lorenzo Garuti">
-    <title>A very simple BottlePy application with SqlAlchemy support</title>
+    <title>{{ meta.title }}</title>
 
-    <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/navbar-fixed/">
+    <link rel="canonical" href="{{ url() }}">
     <link rel="icon" href="/static/img/bottle.ico" />
     
 
